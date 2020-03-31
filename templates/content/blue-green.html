@@ -1,0 +1,113 @@
+{{define "content"}}
+<div class="container" role="main">
+
+    <div class="row ">
+        <div class="page-header">
+            <p>&nbsp;</p>
+            <h1>Blue-Green Deployment</h1>
+        </div>
+    </div>
+
+    <div class="row ">
+        <div class="col-md-6">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div>
+                        <p>
+                            This page shows the load balancing between application versions
+                            based on route mappings.
+                        </p>
+                    </div>
+                    <div id="donut-example" style="height: 250px; text-align: left;"></div>
+                </div>
+                <div class="panel-footer clearfix">
+                    <div class="pull-right">
+                        <a href="javascript:startTimer();" class="btn btn-default">Start</a>
+                        <a href="javascript:reset();" class="btn btn-default">Reset</a>
+                        <a href="javascript:stopTimer();" class="btn btn-default">Stop</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <!-- app details here -->
+        </div>
+
+    </div>
+
+</div>
+<script>
+    var INTERVAL = 1000
+    var timerID = 0;
+    var versions = {};
+    var startTime;
+
+    var colors = [ "#90A6D4", "#90D49C" ];
+
+    var chartData = [ {
+        label : "blue",
+        value : 10
+    }, {
+        label : "green",
+        value : 1
+    } ]
+
+    var chart = Morris.Donut({
+        element : 'donut-example',
+        colors : colors,
+        data : chartData,
+        resize : true
+    });
+
+    function startTimer() {
+        timerID = setInterval(startLoad, INTERVAL);
+    }
+
+    function stopTimer() {
+        if (timerID)
+            clearInterval(timerID);
+    }
+    
+    function reset() {
+        updateScreen(true);
+    }
+    
+    function startLoad() {
+        $.get("/bluegreen-check", function(obj) {
+            const { CF_INSTANCE_ADDR } = {...obj};
+            if (CF_INSTANCE_ADDR in versions) {
+                versions[CF_INSTANCE_ADDR] = 1 + versions[CF_INSTANCE_ADDR];
+            } else {
+                versions[CF_INSTANCE_ADDR] = 1;
+            }
+            updateScreen(false);
+        });
+    }
+
+    function updateScreen(resetCounts) {
+        var html = '';
+
+        chartData = [];
+
+        var i = 2;
+        var color;
+        for ( var version in versions) {
+            if(resetCounts)
+                versions[version] = 0
+                
+            html += '<p><b><span style="color:' + colors[i % 2] + '">'
+                    + version + '</span></b> - ' + versions[version]
+                    + '</p>'
+
+            i++;
+
+            item = {};
+            item.label = version;
+            item.value = versions[version];
+            chartData.push(item);
+        }
+        chart.setData(chartData);
+    }
+</script>
+{{end}}
