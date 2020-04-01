@@ -1,0 +1,14 @@
+---
+defaults: &defaults
+    buildpacks: 
+        - https://github.com/cloudfoundry/go-buildpack.git
+    stack: cflinuxfs3
+    path: '/'
+    timeout: 180
+
+applications:
+    - name: go-webapp
+      <<: *defaults
+      instances: 1
+      memory: 256MB
+      disk: 256MB

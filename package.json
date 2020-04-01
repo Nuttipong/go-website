@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build:sass": "gulp sass"
+    "start": "gulp sass"
   },
   "keywords": [],
   "author": "",

@@ -1,48 +1,53 @@
 {{define "content"}}
-<div class="container" role="main">
-
-    <div class="row ">
-        <div class="page-header">
-            <p>&nbsp;</p>
-            <h1>Blue-Green Deployment</h1>
+<div class="mdc-layout-grid__inner">
+    <div class="mdc-layout-grid__cell--span-6">
+        <h1>Blue-Green Deployment</h1>
+        <p>
+            This page shows the load balancing between application versions
+            based on route mappings.
+        </p>
+        <div id="bluegreenBlock"></div>
+        <div id="donut-chart" style="margin-top: 10%; height: 250px; text-align: left;"></div>
+        <div class="button-container" style="margin-top: 10%; text-align: center;">
+            <button class="mdc-button md-small mdc-button--raised next" onclick="startTimer();">
+                <div class="mdc-button__ripple"></div>
+                <span class="mdc-button__label" style="color: white; font-size: small;">
+                    Start
+                </span>
+            </button>
+            <button class="mdc-button mdc-button--raised next" onclick="reset();">
+                <div class="mdc-button__ripple"></div>
+                <span class="mdc-button__label" style="color: white; font-size: small;">
+                    Reset
+                </span>
+            </button>
+            <button class="mdc-button mdc-button--raised next" onclick="stopTimer();">
+                <div class="mdc-button__ripple"></div>
+                <span class="mdc-button__label" style="color: white; font-size: small;">
+                    Stop
+                </span>
+            </button>
         </div>
     </div>
+    <div class="mdc-layout-grid__cell">
+        <div>
+            <h2>Application Env Info</h2>
+            <p>Application Id: {{.ApplicationId}}</p>
+            <p>Application Name: {{.ApplicationName}}</p>
 
-    <div class="row ">
-        <div class="col-md-6">
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <div>
-                        <p>
-                            This page shows the load balancing between application versions
-                            based on route mappings.
-                        </p>
-                    </div>
-                    <div id="donut-example" style="height: 250px; text-align: left;"></div>
-                </div>
-                <div class="panel-footer clearfix">
-                    <div class="pull-right">
-                        <a href="javascript:startTimer();" class="btn btn-default">Start</a>
-                        <a href="javascript:reset();" class="btn btn-default">Reset</a>
-                        <a href="javascript:stopTimer();" class="btn btn-default">Stop</a>
-                    </div>
-                </div>
-            </div>
+            <h2>Service Info</h2>
+            {{range .Services}}
+                <p>{{.Name}}</p>
+            {{end}}
         </div>
-
-        <div class="col-md-6">
-            <!-- app details here -->
-        </div>
-
     </div>
-
 </div>
+
 <script>
     var INTERVAL = 1000
     var timerID = 0;
     var versions = {};
     var startTime;
-
     var colors = [ "#90A6D4", "#90D49C" ];
 
     var chartData = [ {
@@ -54,7 +59,7 @@
     } ]
 
     var chart = Morris.Donut({
-        element : 'donut-example',
+        element : 'donut-chart',
         colors : colors,
         data : chartData,
         resize : true
@@ -75,11 +80,12 @@
     
     function startLoad() {
         $.get("/bluegreen-check", function(obj) {
-            const { CF_INSTANCE_ADDR } = {...obj};
-            if (CF_INSTANCE_ADDR in versions) {
-                versions[CF_INSTANCE_ADDR] = 1 + versions[CF_INSTANCE_ADDR];
+            const { CF_INSTANCE_ADDR, VCAP_APPLICATION } = {...obj};
+            const jObj = JSON.parse(VCAP_APPLICATION);
+            if (jObj["application_name"] in versions) {
+                versions[jObj["application_name"]] = 1 + versions[jObj["application_name"]];
             } else {
-                versions[CF_INSTANCE_ADDR] = 1;
+                versions[jObj["application_name"]] = 1;
             }
             updateScreen(false);
         });
@@ -87,6 +93,7 @@
 
     function updateScreen(resetCounts) {
         var html = '';
+        var htmlDetail = '';
 
         chartData = [];
 
@@ -107,7 +114,9 @@
             item.value = versions[version];
             chartData.push(item);
         }
+
         chart.setData(chartData);
+        $('#bluegreenBlock').html(html);
     }
 </script>
 {{end}}

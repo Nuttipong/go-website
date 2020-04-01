@@ -3,6 +3,7 @@ package main
 import (
 	"html/template"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 
@@ -10,11 +11,17 @@ import (
 )
 
 func main() {
+	log.Println("Start ...")
 	// setup
 	templates := populateTemplates()
 	controller.Startup(templates)
+	log.Println("Here ...")
 	// start server
-	http.ListenAndServe(":8000", nil)
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Println("Error ...")
+		log.Fatal(err)
+	}
 }
 
 func populateTemplates() map[string]*template.Template {
