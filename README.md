@@ -11,6 +11,10 @@
 5. cf push -> ex) cf push app_name -p ./go-website -m 256M -n sub_domain-temp --no-start, cf push app_name -m 256M --random-route --no-start
 6. cf logs app_name --recent
 7. curl https://go-webapp.apps.adp.ec1.aws.aztec.cloud.allianz
+8. cf push service_name -p ./abc.jar 
+9. cf bind-service s1 s2
+10. cf restart s1
+11. cf app s1
 
 ### Step to deploy webapp over pcf
 1. cf login and choose your space
